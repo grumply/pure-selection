@@ -1,8 +1,8 @@
 function getRelativeSelection (node) {
   var start = 0; 
   var end = 0; 
-  var doc = node.ownerDocument || node.document; 
-  var win = doc.defaultView || doc.parentWindow; 
+  var doc = node.ownerDocument || node.document || document; 
+  var win = doc.defaultView || doc.parentWindow || window; 
   var sel; 
   if (typeof win.getSelection != 'undefined') { 
     sel = win.getSelection(); 
@@ -31,7 +31,6 @@ function getRelativeSelection (node) {
 function setRelativeSelection (el,start,end) {
 	var selection = document.getSelection();
 	var range = document.createRange();
-  console.log([start,end]);
 	withNodeAtCharacterOffset(el,start,(node,x) => { range.setStart(node,x); });
   withNodeAtCharacterOffset(el,end,(node,x) => { range.setEnd(node,x); });
   selection.removeAllRanges();

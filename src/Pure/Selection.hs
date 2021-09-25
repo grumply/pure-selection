@@ -3,29 +3,41 @@ module Pure.Selection
   ( pattern OnSelection
   , getSelection
   , setSelection
-  , wrapSelection
+  , withSelectionTxt
+  , withSelectionView
   ) where
 
-import Pure.Data.View.Transform (contentInRange)
-import Pure.Data.View.Parse (parse)
+import Pure.Data.View (View)
 import Pure.Data.View.Patterns (HasFeatures(..))
 import Pure.Data.Lifted (Node(..),Evt,JSV(..),evtTarget,(.#))
 import Pure.Data.Events (pattern OnDoc)
 import Pure.Data.Txt (Txt(..))
+import Pure.Transform (contentInRange,cut)
+import Pure.Parse (parse)
 
-import Data.Coerce (Coercible,coerce)
+import Data.Coerce (coerce)
 
 pattern OnSelection :: HasFeatures a => (Evt -> IO ()) -> a -> a
 pattern OnSelection f a = OnDoc "selectionchange" f a
 
-withSelection :: Coercible Txt a => (a -> IO ()) -> (Evt -> IO ())
-withSelection f = \ev -> do
+withSelectionTxt :: (Txt -> IO ()) -> (Evt -> IO ())
+withSelectionTxt f = \ev -> do
   msel <- getSelection (coerce (evtTarget ev))
   case msel of
     Just (start,end) -> do
       v <- parse (coerce (evtTarget ev))
-      f (coerce (contentInRange start end v))
+      f (contentInRange start end v)
     _ -> 
+      pure ()
+
+withSelectionView :: ((View,View,View) -> IO ()) -> (Evt -> IO ())
+withSelectionView f = \ev -> do
+  msel <- getSelection (coerce (evtTarget ev))
+  case msel of
+    Just (start,end) -> do
+      v <- parse (coerce (evtTarget ev))
+      f (coerce (cut start end v))
+    _ ->
       pure ()
 
 getSelection :: Node -> IO (Maybe (Int,Int))
